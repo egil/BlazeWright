@@ -85,49 +85,6 @@ jobs:
       - name: 'Dependency Review'
         uses: actions/dependency-review-action@v3
 
-  infer-sharp:
-    runs-on: ubuntu-latest
-    if: github.event_name != 'release'
-    permissions:
-      security-events: write
-    steps:
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 8.0.x
-
-    - run: dotnet build --configuration Release
-
-    - name: Run Infer#
-      uses: microsoft/infersharpaction@v1.5
-      id: runinfersharp
-      with:
-        binary-path: ./src/TimeProviderExtensions/bin/Release/net8.0
-        github-sarif: true
-
-    - name: Create step summary
-      run: |
-        echo # Infer# report >> $GITHUB_STEP_SUMMARY
-        echo ``` >> $GITHUB_STEP_SUMMARY
-        cat infer-out/report.txt >> $GITHUB_STEP_SUMMARY
-        echo ``` >> $GITHUB_STEP_SUMMARY
-
-    - name: Upload Infer# report as an artifact
-      uses: actions/upload-artifact@v2
-      with:
-        name: infer-sharp-report
-        path: infer-out/report.txt
-
-    - name: Upload SARIF output to GitHub Security Center
-      if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      uses: github/codeql-action/upload-sarif@v2
-      with:
-        sarif_file: infer-out/report.sarif
-
   deploy:
     # Publish only when creating a GitHub Release
     # https://docs.github.com/en/repositories/releasing-projects-on-github/managing-releases-in-a-repository
