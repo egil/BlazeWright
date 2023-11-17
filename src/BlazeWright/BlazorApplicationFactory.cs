@@ -4,12 +4,20 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.Hosting;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
-using System.Security.Cryptography.X509Certificates;
+using Microsoft.AspNetCore.Components.Server.Circuits;
 
 namespace BlazeWright;
 
+/// <summary>
+/// Spins up the Blazor Web App referenced by <typeparamref name="TProgram"/>.
+/// The app is available via <c>127.0.0.1</c> on a random free port chosen at start
+/// up.
+/// </summary>
+/// <typeparam name="TProgram"></typeparam>
 public class BlazorApplicationFactory<TProgram> : WebApplicationFactory<TProgram> where TProgram : class
 {
+    private readonly Action<IWebHostBuilder>? configureWebHost;
+    private readonly BlazorServerCircuitMonitor circuitMonitor = new();
     private IHost? host;
 
     public string ServerAddress
@@ -21,24 +29,37 @@ public class BlazorApplicationFactory<TProgram> : WebApplicationFactory<TProgram
         }
     }
 
+    /// <summary>
+    /// Gets a task that is completed when the Blazor Server SignalR connection has been established.
+    /// </summary>
+    public Task CircuitUp => circuitMonitor.CircuitUp;
+
+    public BlazorApplicationFactory()
+    {
+    }
+
+    public BlazorApplicationFactory(Action<IWebHostBuilder> configureWebHost)
+    {
+        this.configureWebHost = configureWebHost;
+    }
+
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
         base.ConfigureWebHost(builder);
-
-        if (File.Exists("localhost-dev.pfx"))
-        {
-            builder.ConfigureKestrel(
-                serverOptions => serverOptions.ConfigureHttpsDefaults(
-                    httpsOptions => httpsOptions.ServerCertificate = new X509Certificate2("localhost-dev.pfx", "Pa55w0rd!")));
-        }
+        configureWebHost?.Invoke(builder);
 
         // Setting port to 0 means that Kestrel will pick any free a port.
         builder.UseUrls("https://127.0.0.1:0");
+
+        builder.ConfigureServices(services =>
+        {
+            services.AddSingleton<CircuitHandler>(circuitMonitor);
+        });
     }
 
     protected override IHost CreateHost(IHostBuilder builder)
     {
-        // Create the host for TestServer now before we modify the builder to use Kestrel instead.    
+        // Create the host for TestServer now before we modify the builder to use Kestrel instead.
         var testHost = builder.Build();
 
         // Modify the host builder to use Kestrel instead of TestServer so we can listen on a real address.    
@@ -78,9 +99,9 @@ public class BlazorApplicationFactory<TProgram> : WebApplicationFactory<TProgram
         }
     }
 
-    public override ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
+        await base.DisposeAsync();
         host?.Dispose();
-        return base.DisposeAsync();
     }
 }
