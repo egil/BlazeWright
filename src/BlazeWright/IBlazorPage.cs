@@ -1,4 +1,6 @@
-﻿namespace BlazorTestingAZ.Tests.BlazeWright;
+﻿using Microsoft.Playwright;
+
+namespace BlazorTestingAZ.Tests.BlazeWright;
 
 public interface IBlazorPage : IPage
 {

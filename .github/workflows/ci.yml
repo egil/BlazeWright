@@ -35,6 +35,8 @@ jobs:
     # Install the .NET SDK indicated in the global.json file
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
 
     # Create the NuGet package in the folder from the environment variable NuGetDirectory
     - run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
@@ -53,6 +55,8 @@ jobs:
     steps:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
 
       - uses: actions/download-artifact@v3
         with:
@@ -86,6 +90,8 @@ jobs:
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
 
     - name: Run tests
       run: dotnet test --configuration Release --framework ${{ matrix.framework }} --logger trx --results-directory "${{ env.TestResultsDirectory }}" --collect:"XPlat Code Coverage" --blame-hang --blame-hang-timeout 5min
@@ -130,6 +136,8 @@ jobs:
 
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
 
     - run: dotnet build --configuration Release
 
