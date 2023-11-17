@@ -16,7 +16,7 @@
     <Title>BlazeWright</Title>
     <Company>Egil Hansen</Company>
     <Authors>Egil Hansen</Authors>
-    <Description></Description>
+    <Description>Enable testing Blazor web apps using Playwright.</Description>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>Blazor, Playwright, testing</PackageTags>
     <Copyright>Egil Hansen</Copyright>
